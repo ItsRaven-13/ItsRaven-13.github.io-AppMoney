@@ -1,0 +1,17 @@
+{
+    "name": "MI PRIMERA PWA APPSHELL",
+    "short_name": "PWA",
+    "icons": [
+      {
+        "src": "images/image.png",
+        "sizes": "512x512",
+        "type": "image/png"
+      }
+    ],
+    "start_url": "/index.html",
+    "display": "standalone",
+    "background_color": "#3c444c",
+    "theme_color": "#443c44",
+    "orientation": "portrait",
+    "categories": ["shopping", "business"]
+  }

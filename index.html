@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PWA - Divisas Appshell</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="tailwind_config.js"></script>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        main {
+            flex-grow: 1;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <header class="bg-primary shadow-lg sticky top-0 z-10">
+        <div class="container mx-auto p-4 flex flex-col md:flex-row justify-between items-center">
+            <h1 class="text-3xl font-extrabold text-white mb-3 md:mb-0">MoneyApp</h1>
+            <nav class="flex space-x-4 md:space-x-8 text-lg">
+                <a href="#" id="nav-converter" class="nav-link text-white font-medium hover:text-accent transition duration-150 py-2 border-b-2 border-transparent">Conversor</a>
+                <a href="#" id="nav-rates" class="nav-link text-white font-medium hover:text-accent transition duration-150 py-2 border-b-2 border-transparent">Tasas Hoy</a>
+                <a href="#" id="nav-historical" class="nav-link text-white font-medium hover:text-accent transition duration-150 py-2 border-b-2 border-transparent">Monedas</a>
+            </nav>
+        </div>
+    </header>
+    
+    <main id="contenido" class="container mx-auto p-4 md:p-8 flex-grow">
+    </main>
+
+    <footer class="bg-secondary text-white text-center p-4 shadow-inner mt-auto">
+        <p class="text-sm">Derechos reservados 2025 - Esteban</p>
+    </footer>
+    
+    <script src="app.js"></script>
+</body>
+</html>
