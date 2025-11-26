@@ -1,6 +1,6 @@
 {
-    "name": "MI PRIMERA PWA APPSHELL",
-    "short_name": "PWA",
+    "name": "AppMoney",
+    "short_name": "AppMoneyPWA",
     "icons": [
       {
         "src": "images/image.png",
@@ -8,7 +8,8 @@
         "type": "image/png"
       }
     ],
-    "start_url": "/index.html",
+    "start_url": "/ItsRaven-13.github.io-AppMoney/",
+    "scope": "/ItsRaven-13.github.io-AppMoney/",
     "display": "standalone",
     "background_color": "#3c444c",
     "theme_color": "#443c44",
