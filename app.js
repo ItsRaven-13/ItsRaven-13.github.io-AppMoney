@@ -97,7 +97,7 @@ const handleFormSubmit = async (event) => {
     `;
     convertBtn.disabled = true;
 
-    const API_KEY = '78dac40a77-c3e4c81e1d-t5bxn0'; 
+    const API_KEY = '6fc3e20401-d29ffba151-t6ce81'; 
     const apiUrl = `https://api.fastforex.io/fetch-one?from=${fromCurrency}&to=${toCurrency}`;
     
     try {
