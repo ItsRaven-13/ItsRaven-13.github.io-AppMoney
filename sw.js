@@ -1,3 +1,4 @@
+importScripts("https://cdn.pushalert.co/sw-86305.js");
 const CACHE_NAME = 'appshell-v1';
 const PRECACHE = [
     '/ItsRaven-13.github.io-AppMoney/',
