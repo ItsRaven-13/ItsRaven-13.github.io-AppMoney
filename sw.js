@@ -1,11 +1,10 @@
 const CACHE_NAME = 'appshell-v1';
 const PRECACHE = [
-    '/',
-    '/index.html',
-    '/app.js',
-    '/style.css',
-    // '/tailwind_config.js',
-    '/manifest.json'
+    '/ItsRaven-13.github.io-AppMoney/',
+    '/ItsRaven-13.github.io-AppMoney/index.html',
+    '/ItsRaven-13.github.io-AppMoney/app.js',
+    '/ItsRaven-13.github.io-AppMoney/style.css',
+    '/ItsRaven-13.github.io-AppMoney/manifest.json'
 ];
 
 self.addEventListener('install', (event) => {
