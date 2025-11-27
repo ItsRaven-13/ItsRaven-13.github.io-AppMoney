@@ -1,6 +1,201 @@
 const AVAILABLE_CURRENCIES = ['MXN', 'USD', 'EUR', 'JPY', 'GBP', 'CAD', 'AUD', 'CHF'];
 const contenido = document.getElementById("contenido");
 
+// ================= NOTIFICACIONES PUSH =================
+
+class PushNotificationManager {
+    constructor() {
+        this.isSubscribed = false;
+        this.registration = null;
+        this.subscription = null;
+        // Clave pública VAPID de ejemplo - DEBES GENERAR LA TUYA PROPIA
+        this.vapidPublicKey = 'BK_viDAtJ_hIn52jh0WlbqrmdvveJkqFNNmztoccOxWXs_Fu6XvkLF1QqVp_2RIGVLe2WU9rsjS9RhjolkqZ25s';
+    }
+
+    async init() {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+            console.warn('Push notifications no son soportadas');
+            return false;
+        }
+
+        try {
+            this.registration = await navigator.serviceWorker.ready;
+            this.subscription = await this.registration.pushManager.getSubscription();
+            this.isSubscribed = !(this.subscription === null);
+
+            console.log('Push Manager inicializado, suscrito:', this.isSubscribed);
+            return true;
+        } catch (error) {
+            console.error('Error inicializando Push Manager:', error);
+            return false;
+        }
+    }
+
+    async subscribeUser() {
+        if (!this.registration) {
+            console.error('Service Worker no registrado');
+            return null;
+        }
+
+        try {
+            const subscription = await this.registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: this.urlBase64ToUint8Array(this.vapidPublicKey)
+            });
+
+            this.subscription = subscription;
+            this.isSubscribed = true;
+
+            console.log('Usuario suscrito:', subscription);
+
+            // Enviar la suscripción al servidor (simulado)
+            await this.sendSubscriptionToServer(subscription);
+
+            return subscription;
+        } catch (error) {
+            if (Notification.permission === 'denied') {
+                console.warn('Permiso para notificaciones denegado');
+            } else {
+                console.error('Error suscribiendo usuario:', error);
+            }
+            return null;
+        }
+    }
+
+    async unsubscribeUser() {
+        if (!this.subscription) {
+            return true;
+        }
+
+        try {
+            await this.subscription.unsubscribe();
+            this.isSubscribed = false;
+            this.subscription = null;
+
+            await this.removeSubscriptionFromServer();
+
+            console.log('Usuario desuscrito');
+            return true;
+        } catch (error) {
+            console.error('Error desuscribiendo usuario:', error);
+            return false;
+        }
+    }
+
+    async requestPermission() {
+        if (Notification.permission === 'denied') {
+            throw new Error('Los permisos fueron denegados previamente. Por favor, habilita las notificaciones en la configuración de tu navegador.');
+        }
+
+        const permission = await Notification.requestPermission();
+        return permission === 'granted';
+    }
+
+    async sendTestNotification() {
+        if (!this.registration) return;
+
+        this.registration.showNotification('AppMoney - Prueba', {
+            body: '¡Las notificaciones push están funcionando correctamente! 🎉',
+            icon: '/ItsRaven-13.github.io-AppMoney/icons/icon-192x192.png',
+            badge: '/ItsRaven-13.github.io-AppMoney/icons/icon-72x72.png',
+            image: '/ItsRaven-13.github.io-AppMoney/icons/icon-512x512.png',
+            actions: [
+                { action: 'convert', title: '💱 Ir al conversor' },
+                { action: 'rates', title: '📈 Ver tasas' },
+                { action: 'close', title: '❌ Cerrar' }
+            ],
+            data: {
+                url: '/ItsRaven-13.github.io-AppMoney/',
+                timestamp: new Date().toISOString()
+            },
+            tag: 'test-notification',
+            renotify: true,
+            vibrate: [200, 100, 200]
+        });
+    }
+
+    async sendConversionNotification(fromCurrency, toCurrency, amount, convertedAmount, rate) {
+        if (!this.registration || !this.isSubscribed) return;
+
+        this.registration.showNotification('✅ Conversión Completada', {
+            body: `${amount} ${fromCurrency} = ${convertedAmount.toFixed(2)} ${toCurrency}`,
+            icon: '/ItsRaven-13.github.io-AppMoney/icons/icon-192x192.png',
+            badge: '/ItsRaven-13.github.io-AppMoney/icons/icon-72x72.png',
+            data: {
+                url: '/ItsRaven-13.github.io-AppMoney/#converter',
+                conversion: { fromCurrency, toCurrency, amount, convertedAmount, rate }
+            },
+            tag: `conversion-${fromCurrency}-${toCurrency}`,
+            timestamp: Date.now()
+        });
+    }
+
+    // Utilidad para convertir la clave VAPID
+    urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding)
+            .replace(/\-/g, '+')
+            .replace(/_/g, '/');
+
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+    }
+
+    // Métodos para comunicarse con el servidor (simulados)
+    async sendSubscriptionToServer(subscription) {
+        console.log('📱 Enviando suscripción al servidor:', subscription);
+
+        // En una aplicación real, aquí enviarías la suscripción a tu backend
+        localStorage.setItem('pushSubscription', JSON.stringify(subscription));
+
+        // Simular envío exitoso
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                console.log('✅ Suscripción guardada localmente');
+                resolve(true);
+            }, 1000);
+        });
+    }
+
+    async removeSubscriptionFromServer() {
+        console.log('🗑️ Eliminando suscripción del servidor');
+        localStorage.removeItem('pushSubscription');
+
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                console.log('✅ Suscripción eliminada localmente');
+                resolve(true);
+            }, 500);
+        });
+    }
+
+    getNotificationStatus() {
+        if (!('Notification' in window)) {
+            return 'no-support';
+        }
+
+        if (Notification.permission === 'denied') {
+            return 'denied';
+        }
+
+        if (Notification.permission === 'granted') {
+            return this.isSubscribed ? 'subscribed' : 'not-subscribed';
+        }
+
+        return 'default';
+    }
+}
+
+// Instancia global del manager de notificaciones
+const pushManager = new PushNotificationManager();
+
+// ================= FUNCIONES ORIGINALES DE LA APP =================
+
 // Función para crear el spinner SVG (se usará en varias vistas)
 const getSpinnerHtml = (sizeClass = 'h-5 w-5', textColor = 'text-accent-color') => {
     return `
@@ -10,7 +205,6 @@ const getSpinnerHtml = (sizeClass = 'h-5 w-5', textColor = 'text-accent-color') 
         </svg>
     `;
 };
-
 
 const createExchangeForm = (currencies) => {
     const fromOptions = currencies.map(currency =>
@@ -105,8 +299,6 @@ const handleFormSubmit = async (event) => {
     `;
     convertBtn.disabled = true;
 
-    // ... (Llamada a la API y lógica de conversión sin cambios) ...
-
     const API_KEY = '6fc3e20401-d29ffba151-t6ce81';
     const apiUrl = `https://api.fastforex.io/fetch-one?from=${fromCurrency}&to=${toCurrency}`;
 
@@ -145,6 +337,11 @@ const handleFormSubmit = async (event) => {
                 </p>
             </div>
         `;
+
+        // Enviar notificación push si está habilitado
+        if (pushManager.isSubscribed) {
+            await pushManager.sendConversionNotification(fromCurrency, toCurrency, amount, convertedAmount, rate);
+        }
 
     } catch (err) {
         console.error("Error en la conversión:", err);
@@ -213,7 +410,6 @@ const renderRates = async () => {
 
             const rowsHtml = results.map(r => {
                 if (r.rate === null) {
-                    // CLASES DE TAILWIND REEMPLAZADAS: flex justify-between py-2
                     return `<li class="app-rate-row"><span>${r.to}</span><span class="text-red-500">n/d</span></li>`;
                 }
                 return `<li class="app-rate-row"><span>${r.to}</span><span class="font-semibold">${r.rate.toFixed(6)}</span></li>`;
@@ -241,7 +437,6 @@ const renderRates = async () => {
 
     fetchAndRender(baseSelect ? baseSelect.value : 'MXN');
 };
-
 
 const renderHistorical = () => {
     if (!contenido) return;
@@ -313,19 +508,193 @@ const renderHistorical = () => {
     fetchCurrencies();
 };
 
+// ================= UI DE NOTIFICACIONES =================
+
+function addNotificationUI() {
+    const notificationSection = `
+        <div class="app-card app-shadow-2xl border-top-accent mt-6">
+            <h2 class="app-h2 text-primary-color mb-4">🔔 Notificaciones Push</h2>
+            
+            <div class="app-space-y-4">
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div>
+                        <span class="text-gray-700 font-medium">Estado:</span>
+                        <span id="notificationStatus" class="ml-2 px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                            Cargando...
+                        </span>
+                    </div>
+                    <div id="notificationBadge" class="hidden">
+                        <span class="px-2 py-1 bg-accent-color text-white text-xs rounded-full">Nuevo</span>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <button id="enableNotifications" class="app-button-accent">
+                        ✅ Activar
+                    </button>
+                    <button id="testNotification" class="app-button-sm bg-blue-500" disabled>
+                        🔔 Probar
+                    </button>
+                    <button id="disableNotifications" class="app-button-sm bg-gray-500" disabled>
+                        ❌ Desactivar
+                    </button>
+                </div>
+                
+                <div id="notificationMessage" class="text-sm font-medium hidden p-3 rounded-lg"></div>
+                
+                <div class="text-xs text-gray-500 mt-2">
+                    <p>💡 Recibe notificaciones cuando completes conversiones y updates de tasas</p>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Agregar después del contenido principal
+    contenido.insertAdjacentHTML('afterend', notificationSection);
+
+    // Configurar event listeners
+    setupNotificationEvents();
+}
+
+function setupNotificationEvents() {
+    const enableBtn = document.getElementById('enableNotifications');
+    const testBtn = document.getElementById('testNotification');
+    const disableBtn = document.getElementById('disableNotifications');
+    const statusEl = document.getElementById('notificationStatus');
+    const messageEl = document.getElementById('notificationMessage');
+    const badgeEl = document.getElementById('notificationBadge');
+
+    // Actualizar estado inicial
+    updateNotificationStatus();
+
+    enableBtn.addEventListener('click', async () => {
+        try {
+            messageEl.classList.add('hidden');
+            enableBtn.disabled = true;
+            enableBtn.innerHTML = `${getSpinnerHtml('h-4 w-4', 'text-white')} Activando...`;
+
+            const granted = await pushManager.requestPermission();
+            if (!granted) {
+                showMessage('❌ Los permisos para notificaciones fueron denegados. Por favor, habilítalos manualmente en la configuración de tu navegador.', 'error');
+                enableBtn.disabled = false;
+                enableBtn.innerHTML = '✅ Activar';
+                return;
+            }
+
+            const subscription = await pushManager.subscribeUser();
+            if (subscription) {
+                showMessage('🎉 ¡Notificaciones activadas correctamente! Ahora recibirás alertas de tus conversiones.', 'success');
+                badgeEl.classList.remove('hidden');
+                updateNotificationStatus();
+            } else {
+                showMessage('❌ Error al activar notificaciones. Intenta nuevamente.', 'error');
+            }
+        } catch (error) {
+            showMessage(`❌ ${error.message}`, 'error');
+        } finally {
+            enableBtn.disabled = false;
+            enableBtn.innerHTML = '✅ Activar';
+        }
+    });
+
+    testBtn.addEventListener('click', () => {
+        pushManager.sendTestNotification();
+        showMessage('🔔 Notificación de prueba enviada. Revisa tu bandeja de notificaciones.', 'success');
+    });
+
+    disableBtn.addEventListener('click', async () => {
+        disableBtn.disabled = true;
+        disableBtn.innerHTML = `${getSpinnerHtml('h-4 w-4', 'text-white')} Desactivando...`;
+
+        const success = await pushManager.unsubscribeUser();
+        if (success) {
+            showMessage('🔕 Notificaciones desactivadas. Ya no recibirás alertas.', 'success');
+            badgeEl.classList.add('hidden');
+            updateNotificationStatus();
+        } else {
+            showMessage('❌ Error al desactivar notificaciones', 'error');
+        }
+
+        disableBtn.disabled = false;
+        disableBtn.innerHTML = '❌ Desactivar';
+    });
+
+    function updateNotificationStatus() {
+        const status = pushManager.getNotificationStatus();
+
+        let statusText, colorClass, badgeText;
+
+        switch (status) {
+            case 'no-support':
+                statusText = 'No soportado';
+                colorClass = 'bg-red-100 text-red-800';
+                break;
+            case 'denied':
+                statusText = 'Permiso denegado';
+                colorClass = 'bg-red-100 text-red-800';
+                break;
+            case 'subscribed':
+                statusText = 'Activadas';
+                colorClass = 'bg-green-100 text-green-800';
+                badgeText = 'Conectado';
+                break;
+            case 'not-subscribed':
+                statusText = 'No activadas';
+                colorClass = 'bg-yellow-100 text-yellow-800';
+                break;
+            default:
+                statusText = 'Desconocido';
+                colorClass = 'bg-gray-100 text-gray-800';
+        }
+
+        statusEl.textContent = statusText;
+        statusEl.className = `ml-2 px-3 py-1 rounded-full text-sm font-medium ${colorClass}`;
+
+        testBtn.disabled = !pushManager.isSubscribed;
+        disableBtn.disabled = !pushManager.isSubscribed;
+        enableBtn.disabled = pushManager.isSubscribed || status === 'denied' || status === 'no-support';
+
+        if (status === 'denied') {
+            enableBtn.innerHTML = '🚫 Permiso denegado';
+        } else if (status === 'no-support') {
+            enableBtn.innerHTML = '📱 No soportado';
+        }
+    }
+
+    function showMessage(text, type) {
+        messageEl.textContent = text;
+        messageEl.className = `text-sm font-medium p-3 rounded-lg ${type === 'error'
+                ? 'bg-red-50 text-red-700 border border-red-200'
+                : 'bg-green-50 text-green-700 border border-green-200'
+            }`;
+        messageEl.classList.remove('hidden');
+
+        setTimeout(() => {
+            messageEl.classList.add('hidden');
+        }, 5000);
+    }
+}
+
+async function initNotifications() {
+    const supported = await pushManager.init();
+    if (supported) {
+        addNotificationUI();
+    } else {
+        console.log('Notificaciones push no soportadas en este navegador');
+    }
+}
+
+// ================= VISTAS Y NAVEGACIÓN =================
 
 const switchView = (viewId) => {
     const navLinks = document.querySelectorAll('.nav-link');
 
     navLinks.forEach(link => {
-        // CLASES DE TAILWIND REEMPLAZADAS: text-accent, border-b-2, border-accent, font-semibold
         link.classList.remove('text-accent-color', 'border-bottom-accent', 'font-semibold');
-        // CLASES DE TAILWIND REEMPLAZADAS: text-white, font-medium
         link.classList.add('text-white', 'font-medium');
 
         if (link.id === `nav-${viewId}`) {
             link.classList.remove('text-white', 'font-medium');
-            // CLASES DE TAILWIND REEMPLAZADAS: text-accent, border-b-2, border-accent, font-semibold
             link.classList.add('text-accent-color', 'border-bottom-accent', 'font-semibold');
         }
     });
@@ -377,6 +746,8 @@ const renderConverter = () => {
     }, 300);
 };
 
+// ================= INICIALIZACIÓN DE LA APP =================
+
 const initApp = () => {
     const navLinks = document.querySelectorAll('.nav-link');
 
@@ -393,20 +764,52 @@ const initApp = () => {
     });
 
     switchView('converter');
+
+    // Inicializar notificaciones después de que todo esté listo
+    setTimeout(() => {
+        initNotifications();
+    }, 1000);
 };
 
 document.addEventListener("DOMContentLoaded", initApp);
 
+// ================= SERVICE WORKER =================
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
         try {
-            // CAMBIO NECESARIO AQUÍ: Incluir el nombre del repositorio como subdirectorio
-            const reg = await navigator.serviceWorker.register('/ItsRaven-13.github.io-AppMoney/sw.js', { scope: '/ItsRaven-13.github.io-AppMoney/' });
+            const reg = await navigator.serviceWorker.register('/ItsRaven-13.github.io-AppMoney/sw.js', {
+                scope: '/ItsRaven-13.github.io-AppMoney/'
+            });
 
-            console.log('Service Worker registrado:', reg.scope);
+            console.log('✅ Service Worker registrado:', reg.scope);
+
+            // Enviar mensaje al Service Worker cuando esté listo
+            if (reg.active) {
+                reg.active.postMessage({
+                    type: 'CLIENT_READY',
+                    message: 'Cliente conectado correctamente'
+                });
+            }
         } catch (err) {
-            console.warn('Registro SW falló:', err);
+            console.warn('❌ Registro SW falló:', err);
         }
     });
 }
+
+// ================= MANEJO DE CONECTIVIDAD =================
+
+// Mostrar estado de conexión
+function updateOnlineStatus() {
+    const status = navigator.onLine ? 'online' : 'offline';
+    console.log(`Estado de conexión: ${status}`);
+
+    if (!navigator.onLine && pushManager.isSubscribed) {
+        // Podrías enviar una notificación cuando se recupere la conexión
+        console.log('App funciona offline gracias al Service Worker');
+    }
+}
+
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+updateOnlineStatus();
