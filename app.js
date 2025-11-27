@@ -1,6 +1,17 @@
 const AVAILABLE_CURRENCIES = ['MXN', 'USD', 'EUR', 'JPY', 'GBP', 'CAD', 'AUD', 'CHF'];
 const contenido = document.getElementById("contenido");
 
+// Función para crear el spinner SVG (se usará en varias vistas)
+const getSpinnerHtml = (sizeClass = 'h-5 w-5', textColor = 'text-accent-color') => {
+    return `
+        <svg class="app-spinner ${sizeClass} ${textColor}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+    `;
+};
+
+
 const createExchangeForm = (currencies) => {
     const fromOptions = currencies.map(currency =>
         `<option value="${currency}" ${currency === 'MXN' ? 'selected' : ''}>${currency}</option>`
@@ -11,40 +22,40 @@ const createExchangeForm = (currencies) => {
     ).join('');
 
     return `
-        <div class="bg-white p-6 md:p-10 rounded-xl shadow-2xl border-t-4 border-accent transition-all duration-300">
-            <h2 class="text-2xl font-bold text-primary mb-6">Conversor de Divisas</h2>
+        <div class="app-card app-shadow-2xl border-top-accent transition-all duration-300">
+            <h2 class="app-h2 text-primary-color mb-6">Conversor de Divisas</h2>
             
-            <form id="exchangeForm" class="space-y-6">
+            <form id="exchangeForm" class="app-space-y-6">
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="app-grid-2-cols app-gap-4">
                     <div>
-                        <label for="currencyFrom" class="block text-sm font-medium text-gray-700 mb-1">Moneda de origen</label>
-                        <select id="currencyFrom" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-accent focus:border-accent shadow-sm bg-gray-50">
+                        <label for="currencyFrom" class="app-label mb-1">Moneda de origen</label>
+                        <select id="currencyFrom" class="app-input-select app-focus-accent">
                             ${fromOptions}
                         </select>
                     </div>
 
                     <div>
-                        <label for="currencyTo" class="block text-sm font-medium text-gray-700 mb-1">Moneda de destino</label>
-                        <select id="currencyTo" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-accent focus:border-accent shadow-sm bg-gray-50">
+                        <label for="currencyTo" class="app-label mb-1">Moneda de destino</label>
+                        <select id="currencyTo" class="app-input-select app-focus-accent">
                             ${toOptions}
                         </select>
                     </div>
                 </div>
 
-                <p id="errorMsg" class="text-sm text-red-600 font-medium hidden">Error: las monedas de origen y destino no pueden ser las mismas.</p>
+                <p id="errorMsg" class="app-text-error hidden">Error: las monedas de origen y destino no pueden ser las mismas.</p>
 
                 <div>
-                    <label for="amountUSD" class="block text-sm font-medium text-gray-700 mb-1">Cantidad a convertir</label>
-                    <input type="text" id="amountUSD" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-accent focus:border-accent shadow-sm" placeholder="Ej: 1000.50">
+                    <label for="amountUSD" class="app-label mb-1">Cantidad a convertir</label>
+                    <input type="text" id="amountUSD" class="app-input-text app-focus-accent" placeholder="Ej: 1000.50">
                 </div>
 
-                <button type="submit" id="convertBtn" class="w-full bg-accent hover:bg-blue-600 text-white font-semibold py-3 rounded-lg transition duration-200 shadow-md disabled:opacity-50" disabled>
+                <button type="submit" id="convertBtn" class="app-button-accent" disabled>
                     Convertir
                 </button>
             </form>
 
-            <div id="resultArea" class="mt-6 p-4 bg-secondary/50 rounded-lg border border-accent/30 hidden">
+            <div id="resultArea" class="mt-6 app-result-area hidden">
             </div>
         </div>
     `;
@@ -80,22 +91,21 @@ const handleFormSubmit = async (event) => {
     const amount = parseFloat(amountInput.replace(',', '.'));
 
     if (isNaN(amount) || amount <= 0) {
-        resultArea.innerHTML = '<p class="text-red-500 font-medium">Por favor, introduce una cantidad válida.</p>';
+        resultArea.innerHTML = '<p class="text-error-color font-medium">Por favor, introduce una cantidad válida.</p>';
         resultArea.classList.remove('hidden');
         return;
     }
 
     resultArea.classList.remove('hidden');
     resultArea.innerHTML = `
-        <div class="flex items-center space-x-2 text-primary font-medium">
-            <svg class="animate-spin h-5 w-5 text-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
+        <div class="flex items-center space-x-2 text-primary-color font-medium">
+            ${getSpinnerHtml()}
             <span>Obteniendo tasa ${fromCurrency} → ${toCurrency}...</span>
         </div>
     `;
     convertBtn.disabled = true;
+
+    // ... (Llamada a la API y lógica de conversión sin cambios) ...
 
     const API_KEY = '6fc3e20401-d29ffba151-t6ce81';
     const apiUrl = `https://api.fastforex.io/fetch-one?from=${fromCurrency}&to=${toCurrency}`;
@@ -124,13 +134,13 @@ const handleFormSubmit = async (event) => {
 
         resultArea.innerHTML = `
             <div class="space-y-3">
-                <p class="text-lg font-medium text-primary">Tasa de cambio actual:</p>
+                <p class="text-lg font-medium text-primary-color">Tasa de cambio actual:</p>
                 <p class="text-xl font-bold text-gray-800">1 ${fromCurrency} = ${rate.toFixed(6)} ${toCurrency}</p>
                 
                 <hr class="border-gray-300">
 
-                <p class="text-lg font-medium text-primary">Resultado de la conversión:</p>
-                <p class="text-2xl font-extrabold text-accent">
+                <p class="text-lg font-medium text-primary-color">Resultado de la conversión:</p>
+                <p class="app-result-text text-accent-color">
                     ${formatNumber(amount, fromCurrency)} = ${formatNumber(convertedAmount, toCurrency)}
                 </p>
             </div>
@@ -138,7 +148,7 @@ const handleFormSubmit = async (event) => {
 
     } catch (err) {
         console.error("Error en la conversión:", err);
-        resultArea.innerHTML = `<p class="text-red-500 font-medium">Error al obtener el tipo de cambio. ${err.message}</p>`;
+        resultArea.innerHTML = `<p class="text-error-color font-medium">Error al obtener el tipo de cambio. ${err.message}</p>`;
     } finally {
         convertBtn.disabled = false;
     }
@@ -148,24 +158,21 @@ const renderRates = async () => {
     if (!contenido) return;
 
     contenido.innerHTML = `
-        <div class="bg-white p-6 md:p-10 rounded-xl shadow-2xl border-t-4 border-accent">
+        <div class="app-card app-shadow-2xl border-top-accent">
             <div class="flex items-center justify-between mb-4">
-                <h2 class="text-2xl font-bold text-primary">Tasas de Cambio</h2>
+                <h2 class="app-h2 text-primary-color">Tasas de Cambio</h2>
                 <div class="flex items-center space-x-3">
                     <label for="baseSelect" class="text-sm text-gray-600">Base:</label>
-                    <select id="baseSelect" class="p-2 border rounded bg-gray-50">
+                    <select id="baseSelect" class="app-input-select-sm">
                         ${AVAILABLE_CURRENCIES.map(c => `<option value="${c}" ${c === 'MXN' ? 'selected' : ''}>${c}</option>`).join('')}
                     </select>
-                    <button id="refreshRates" class="ml-2 bg-accent text-white px-3 py-2 rounded">Actualizar</button>
+                    <button id="refreshRates" class="ml-2 app-button-sm">Actualizar</button>
                 </div>
             </div>
 
             <div id="ratesContainer" class="text-gray-700">
-                <div class="flex items-center justify-center space-x-3 text-lg font-medium text-gray-600">
-                    <svg class="animate-spin h-6 w-6 text-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
+                <div class="app-loading-state text-lg font-medium text-gray-600">
+                    ${getSpinnerHtml('h-6 w-6', 'text-accent-color')}
                     <span>Cargando...</span>
                 </div>
             </div>
@@ -181,11 +188,8 @@ const renderRates = async () => {
     const fetchAndRender = async (base) => {
         if (!ratesContainer) return;
         ratesContainer.innerHTML = `
-            <div class="flex items-center justify-center space-x-3 text-lg font-medium text-gray-600">
-                <svg class="animate-spin h-6 w-6 text-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
+            <div class="app-loading-state text-lg font-medium text-gray-600">
+                ${getSpinnerHtml('h-6 w-6', 'text-accent-color')}
                 <span>Obteniendo tasas (base: ${base})...</span>
             </div>
         `;
@@ -209,14 +213,15 @@ const renderRates = async () => {
 
             const rowsHtml = results.map(r => {
                 if (r.rate === null) {
-                    return `<li class="flex justify-between py-2"><span>${r.to}</span><span class="text-red-500">n/d</span></li>`;
+                    // CLASES DE TAILWIND REEMPLAZADAS: flex justify-between py-2
+                    return `<li class="app-rate-row"><span>${r.to}</span><span class="text-red-500">n/d</span></li>`;
                 }
-                return `<li class="flex justify-between py-2"><span>${r.to}</span><span class="font-semibold">${r.rate.toFixed(6)}</span></li>`;
+                return `<li class="app-rate-row"><span>${r.to}</span><span class="font-semibold">${r.rate.toFixed(6)}</span></li>`;
             }).join('');
 
             ratesContainer.innerHTML = `
-                <div class="bg-white rounded-lg border border-gray-100 p-4">
-                    <ul class="list-none divide-y divide-gray-100 text-gray-700">
+                <div class="app-rates-box">
+                    <ul class="app-list-divider">
                         ${rowsHtml}
                     </ul>
                 </div>
@@ -242,15 +247,15 @@ const renderHistorical = () => {
     if (!contenido) return;
 
     contenido.innerHTML = `
-        <div class="bg-white p-6 md:p-10 rounded-xl shadow-2xl border-t-4 border-accent">
-            <h2 class="text-2xl font-bold text-primary mb-4">Monedas Disponibles</h2>
-            <div class="flex flex-col md:flex-row md:items-center md:space-x-3 mb-4">
-                <input id="currSearch" type="search" placeholder="Buscar por código o nombre..." class="flex-1 p-2 border rounded bg-gray-50 mb-3 md:mb-0">
-                <button id="refreshCurr" class="bg-accent text-white py-2 px-3 rounded-lg">Actualizar</button>
+        <div class="app-card app-shadow-2xl border-top-accent">
+            <h2 class="app-h2 text-primary-color mb-4">Monedas Disponibles</h2>
+            <div class="app-flex-search mb-4">
+                <input id="currSearch" type="search" placeholder="Buscar por código o nombre..." class="app-input-search mb-3 md:mb-0">
+                <button id="refreshCurr" class="app-button-sm">Actualizar</button>
             </div>
 
             <div id="currStatus" class="text-gray-600 mb-3"></div>
-            <div id="currList" class="grid grid-cols-1 md:grid-cols-2 gap-2 text-gray-700"></div>
+            <div id="currList" class="app-grid-2-cols app-gap-2 text-gray-700"></div>
         </div>
     `;
 
@@ -271,9 +276,9 @@ const renderHistorical = () => {
             return;
         }
         currList.innerHTML = filtered.map(([code, name]) => `
-            <div class="p-3 bg-gray-50 rounded-lg border border-gray-100 flex justify-between items-center">
+            <div class="app-currency-item">
                 <div>
-                    <p class="font-semibold text-primary">${code}</p>
+                    <p class="font-semibold text-primary-color">${code}</p>
                     <p class="text-sm text-gray-600">${name || '—'}</p>
                 </div>
             </div>
@@ -297,7 +302,7 @@ const renderHistorical = () => {
             renderItems(final, currSearch.value || '');
         } catch (err) {
             console.error('Error al cargar monedas:', err);
-            currStatus.innerHTML = `<p class="text-red-500">No se pudieron cargar las monedas. Reintenta.</p>`;
+            currStatus.innerHTML = `<p class="text-error-color">No se pudieron cargar las monedas. Reintenta.</p>`;
             currList.innerHTML = `<p class="text-sm text-gray-500">Error al obtener datos.</p>`;
         }
     };
@@ -313,12 +318,15 @@ const switchView = (viewId) => {
     const navLinks = document.querySelectorAll('.nav-link');
 
     navLinks.forEach(link => {
-        link.classList.remove('text-accent', 'border-b-2', 'border-accent', 'font-semibold');
+        // CLASES DE TAILWIND REEMPLAZADAS: text-accent, border-b-2, border-accent, font-semibold
+        link.classList.remove('text-accent-color', 'border-bottom-accent', 'font-semibold');
+        // CLASES DE TAILWIND REEMPLAZADAS: text-white, font-medium
         link.classList.add('text-white', 'font-medium');
 
         if (link.id === `nav-${viewId}`) {
             link.classList.remove('text-white', 'font-medium');
-            link.classList.add('text-accent', 'border-b-2', 'border-accent', 'font-semibold');
+            // CLASES DE TAILWIND REEMPLAZADAS: text-accent, border-b-2, border-accent, font-semibold
+            link.classList.add('text-accent-color', 'border-bottom-accent', 'font-semibold');
         }
     });
 
@@ -341,13 +349,10 @@ const renderConverter = () => {
     if (!contenido) return;
 
     contenido.innerHTML = `
-        <div class="bg-white p-6 md:p-10 rounded-xl shadow-2xl border-t-4 border-accent transition-all duration-300">
-            <h2 class="text-2xl font-bold text-primary mb-6">Conversor de Divisas</h2>
-            <div class="flex items-center justify-center space-x-3 text-lg font-medium text-gray-600">
-                <svg class="animate-spin h-6 w-6 text-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
+        <div class="app-card app-shadow-2xl border-top-accent transition-all duration-300">
+            <h2 class="app-h2 text-primary-color mb-6">Conversor de Divisas</h2>
+            <div class="app-loading-state text-lg font-medium text-gray-600">
+                ${getSpinnerHtml('h-6 w-6', 'text-accent-color')}
                 <span>Cargando...</span>
             </div>
         </div>

@@ -6,16 +6,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PWA - Divisas Appshell</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="tailwind_config.js"></script>
+    
+    <link rel="stylesheet" href="style.css"> 
+    
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" href="/ItsRaven-13.github.io-AppMoney/images/image.png">
+    
     <style>
+        /* Mantenemos la importación de la fuente aquí si no la pusiste en style.css */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
 
+        /* Estos estilos base se mantienen */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f0f4f8;
+            background-color: #f0f4f8; /* Reemplazo de bg-gray-100 */
             display: flex;
             flex-direction: column;
             min-height: 100vh;
@@ -27,8 +31,7 @@
     </style>
 </head>
 
-<body class="bg-gray-100">
-
+<body>
     <header class="bg-primary shadow-lg sticky top-0 z-10">
         <div class="container mx-auto p-4 flex flex-col md:flex-row justify-between items-center">
             <h1 class="text-3xl font-extrabold text-white mb-3 md:mb-0">MoneyApp</h1>
