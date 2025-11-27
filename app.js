@@ -2,11 +2,11 @@ const AVAILABLE_CURRENCIES = ['MXN', 'USD', 'EUR', 'JPY', 'GBP', 'CAD', 'AUD', '
 const contenido = document.getElementById("contenido");
 
 const createExchangeForm = (currencies) => {
-    const fromOptions = currencies.map(currency => 
+    const fromOptions = currencies.map(currency =>
         `<option value="${currency}" ${currency === 'MXN' ? 'selected' : ''}>${currency}</option>`
     ).join('');
-    
-    const toOptions = currencies.map(currency => 
+
+    const toOptions = currencies.map(currency =>
         `<option value="${currency}" ${currency === 'USD' ? 'selected' : ''}>${currency}</option>`
     ).join('');
 
@@ -53,7 +53,7 @@ const createExchangeForm = (currencies) => {
 const checkCurrencySelection = () => {
     const btn = document.getElementById('convertBtn');
     const errorMsg = document.getElementById('errorMsg');
-    
+
     if (!btn || !errorMsg) return;
 
     const from = document.getElementById('currencyFrom').value;
@@ -75,7 +75,7 @@ const handleFormSubmit = async (event) => {
 
     const fromCurrency = document.getElementById('currencyFrom').value;
     const toCurrency = document.getElementById('currencyTo').value;
-    
+
     const amountInput = document.getElementById('amountUSD').value;
     const amount = parseFloat(amountInput.replace(',', '.'));
 
@@ -97,23 +97,23 @@ const handleFormSubmit = async (event) => {
     `;
     convertBtn.disabled = true;
 
-    const API_KEY = '6fc3e20401-d29ffba151-t6ce81'; 
+    const API_KEY = '6fc3e20401-d29ffba151-t6ce81';
     const apiUrl = `https://api.fastforex.io/fetch-one?from=${fromCurrency}&to=${toCurrency}`;
-    
+
     try {
         const res = await fetch(apiUrl, {
             headers: { 'X-API-Key': API_KEY }
         });
-        
+
         if (!res.ok) throw new Error(`Respuesta de la red: ${res.status}`);
-        
+
         const data = await res.json();
         const rate = data && data.result && data.result[toCurrency];
-        
+
         if (!rate) throw new Error('Formato de respuesta de la API inesperado o tasa no disponible.');
 
         const convertedAmount = amount * rate;
-        
+
         const formatNumber = (num, currency) => {
             return new Intl.NumberFormat('es-MX', {
                 style: 'currency',
@@ -194,15 +194,15 @@ const renderRates = async () => {
         try {
             const requests = targets.map(to =>
                 fetch(`https://api.fastforex.io/fetch-one?from=${base}&to=${to}&api_key=${API_KEY}`)
-                .then(res => {
-                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                    return res.json();
-                })
-                .then(json => {
-                    const rate = json && json.result && json.result[to];
-                    return { to, rate: typeof rate === 'number' ? rate : null };
-                })
-                .catch(() => ({ to, rate: null }))
+                    .then(res => {
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        return res.json();
+                    })
+                    .then(json => {
+                        const rate = json && json.result && json.result[to];
+                        return { to, rate: typeof rate === 'number' ? rate : null };
+                    })
+                    .catch(() => ({ to, rate: null }))
             );
 
             const results = await Promise.all(requests);
@@ -311,7 +311,7 @@ const renderHistorical = () => {
 
 const switchView = (viewId) => {
     const navLinks = document.querySelectorAll('.nav-link');
-    
+
     navLinks.forEach(link => {
         link.classList.remove('text-accent', 'border-b-2', 'border-accent', 'font-semibold');
         link.classList.add('text-white', 'font-medium');
@@ -355,7 +355,7 @@ const renderConverter = () => {
 
     setTimeout(() => {
         contenido.innerHTML = createExchangeForm(AVAILABLE_CURRENCIES);
-        
+
         const form = document.getElementById('exchangeForm');
         const fromSelect = document.getElementById('currencyFrom');
         const toSelect = document.getElementById('currencyTo');
@@ -374,7 +374,7 @@ const renderConverter = () => {
 
 const initApp = () => {
     const navLinks = document.querySelectorAll('.nav-link');
-    
+
     if (navLinks.length === 0) {
         console.warn('ERROR CRÍTICO: No se encontraron los enlaces de navegación. Revisar index.html.');
     }
@@ -382,26 +382,26 @@ const initApp = () => {
     navLinks.forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
-            const viewId = link.id.split('-')[1]; 
+            const viewId = link.id.split('-')[1];
             switchView(viewId);
         });
     });
 
-    switchView('converter'); 
+    switchView('converter');
 };
 
 document.addEventListener("DOMContentLoaded", initApp);
 
 
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', async () => {
-    try {
-      // CAMBIO NECESARIO AQUÍ: Incluir el nombre del repositorio como subdirectorio
-      const reg = await navigator.serviceWorker.register('/ItsRaven-13.github.io-AppMoney/sw.js', { scope: '/ItsRaven-13.github.io-AppMoney/' }); 
-      
-      console.log('Service Worker registrado:', reg.scope);
-    } catch (err) {
-      console.warn('Registro SW falló:', err); 
-    }
-  });
+    window.addEventListener('load', async () => {
+        try {
+            // CAMBIO NECESARIO AQUÍ: Incluir el nombre del repositorio como subdirectorio
+            const reg = await navigator.serviceWorker.register('/ItsRaven-13.github.io-AppMoney/sw.js', { scope: '/ItsRaven-13.github.io-AppMoney/' });
+
+            console.log('Service Worker registrado:', reg.scope);
+        } catch (err) {
+            console.warn('Registro SW falló:', err);
+        }
+    });
 }
