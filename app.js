@@ -193,9 +193,7 @@ const renderRates = async () => {
         const targets = AVAILABLE_CURRENCIES.filter(c => c !== base);
         try {
             const requests = targets.map(to =>
-                fetch(`https://api.fastforex.io/fetch-one?from=${base}&to=${to}`, {
-                    headers: { 'X-API-Key': API_KEY }
-                })
+                fetch(`https://api.fastforex.io/fetch-one?from=${base}&to=${to}&api_key=${API_KEY}`)
                 .then(res => {
                     if (!res.ok) throw new Error(`HTTP ${res.status}`);
                     return res.json();
