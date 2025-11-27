@@ -256,7 +256,7 @@ const renderHistorical = () => {
         </div>
     `;
 
-    const API_KEY = '78dac40a77-c3e4c81e1d-t5bxn0';
+    const API_KEY = '6fc3e20401-d29ffba151-t6ce81';
     const currList = document.getElementById('currList');
     const currStatus = document.getElementById('currStatus');
     const currSearch = document.getElementById('currSearch');
@@ -393,3 +393,14 @@ const initApp = () => {
 };
 
 document.addEventListener("DOMContentLoaded", initApp);
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
+    try {
+      const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+      console.log('Service Worker registrado:', reg.scope);
+    } catch (err) {
+      console.warn('Registro SW falló:', err);
+    }
+  });
+}
