@@ -392,13 +392,16 @@ const initApp = () => {
 
 document.addEventListener("DOMContentLoaded", initApp);
 
+
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', async () => {
-    try {
-      const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
-      console.log('Service Worker registrado:', reg.scope);
-    } catch (err) {
-      console.warn('Registro SW falló:', err);
-    }
-  });
+  window.addEventListener('load', async () => {
+    try {
+      // CAMBIO NECESARIO AQUÍ: Incluir el nombre del repositorio como subdirectorio
+      const reg = await navigator.serviceWorker.register('/ItsRaven-13.github.io-AppMoney/sw.js', { scope: '/ItsRaven-13.github.io-AppMoney/' }); 
+      
+      console.log('Service Worker registrado:', reg.scope);
+    } catch (err) {
+      console.warn('Registro SW falló:', err); 
+    }
+  });
 }
