@@ -4,7 +4,7 @@ const PRECACHE = [
     '/index.html',
     '/app.js',
     '/style.css',
-    '/tailwind_config.js',
+    // '/tailwind_config.js',
     '/manifest.json'
 ];
 
